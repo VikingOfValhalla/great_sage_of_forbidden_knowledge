@@ -25,6 +25,9 @@ import requests
 import threading
 import time
 
+
+
+
 # other files
 from commands import *
 from server_rules import *
@@ -66,6 +69,7 @@ ws = websocket.WebSocket()
 ws.connect("wss://gateway.discord.gg/?v=6&encoding=json")
 
 event = receive_json_response(ws)
+
 
 heartbeat_interval = event["d"]["heartbeat_interval"] / 1000
 
