@@ -27,20 +27,40 @@ class WebSocket_Config:
         }
     }
 
-    
+
+def heartbeat_interval(ws, interval):
+    print("heartbeat begin")
+    while True:
+        time.sleep(interval)
+        heartbeat_JSON = {
+                "op": 1,
+                "d": "null"
+        }
+        on_open(ws, heartbeat_JSON)
+        print("Heartbeat Sent")
+
+   
 def on_message(ws, message):
     print("This is the start of the on_message_function")
-    print(message)
+    # print(message)
+
 
 def on_error(ws, error):
     print(error)
 
+
 def on_close(ws, close_status_code, close_msg):
     print("### closed ###")
 
+
 def on_open(ws):
     ws.send(json.dumps(WebSocket_Config.payload))
-    print("Opened connection")
+    response = ws.recv()
+    print(response)
+    if response:
+        return json.loads(response)
+    # print("Opened connection")
+
 
 if __name__ == "__main__":
     websocket.enableTrace(True)
@@ -49,7 +69,8 @@ if __name__ == "__main__":
                               on_message=on_message,
                               on_error=on_error,
                               on_close=on_close)
-
+    
+    # heartbeat_interval(ws,  1000)
     ws.run_forever(dispatcher=rel)  # Set dispatcher to automatic reconnection
     rel.signal(2, rel.abort)  # Keyboard Interrupt
     rel.dispatch()
