@@ -2,8 +2,8 @@ import websocket
 import json as json
 import os
 import time
-import rel
-import _thread
+import requests
+import threading
 from dotenv import load_dotenv
 
 
@@ -28,6 +28,16 @@ class WebSocket_Config:
     }
 
 
+def send_json_request(ws, request):
+    ws.send(json.dumps(request))
+
+
+def receive_json_response(ws):
+    response = ws.recv()
+    if response:
+        return json.loads(response)
+
+
 def heartbeat_interval(ws, interval):
     print("heartbeat begin")
     while True:
@@ -36,44 +46,29 @@ def heartbeat_interval(ws, interval):
                 "op": 1,
                 "d": "null"
         }
-        on_open(ws, heartbeat_JSON)
+        send_json_request(ws, heartbeat_JSON)
         print("Heartbeat Sent")
-
-   
-def on_message(ws, message):
-    print("This is the start of the on_message_function")
-    # print(message)
-
-
-def on_error(ws, error):
-    print(error)
-
-
-def on_close(ws, close_status_code, close_msg):
-    print("### closed ###")
-
-
-def on_open(ws):
-    ws.send(json.dumps(WebSocket_Config.payload))
-    response = ws.recv()
-    print(response)
-    if response:
-        return json.loads(response)
-    # print("Opened connection")
 
 
 if __name__ == "__main__":
+    # Main settings
     websocket.enableTrace(True)
-    ws = websocket.WebSocketApp(WebSocket_Config.address,
-                              on_open=on_open,
-                              on_message=on_message,
-                              on_error=on_error,
-                              on_close=on_close)
-    
-    # heartbeat_interval(ws,  1000)
-    ws.run_forever(dispatcher=rel)  # Set dispatcher to automatic reconnection
-    rel.signal(2, rel.abort)  # Keyboard Interrupt
-    rel.dispatch()
+    ws = websocket.WebSocket()
+    ws.connect(WebSocket_Config.address)
 
+    # Receive, Heartbeat, and Send
+    event = receive_json_response(ws)
+    heartbeat_interval_time = event["d"]["heartbeat_interval"] / 1000
+    threading._start_new_thread(heartbeat_interval, (ws, heartbeat_interval_time))
+    send_json_request(ws, WebSocket_Config.payload)
+    
+    try:
+        while True:
+            event = receive_json_response(ws)    
+            message_header = {"authorization": "Bot {}".format(WebSocket_Config.botToken)}
+            print(event["d"])
+
+    except Exception as e:
+        print(e)
 
 
