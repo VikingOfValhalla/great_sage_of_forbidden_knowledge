@@ -50,6 +50,11 @@ def heartbeat_interval(ws, interval):
         print("Heartbeat Sent")
 
 
+def slash_command(content):
+    if content.startswith("/"): 
+        print(content)
+
+
 if __name__ == "__main__":
     # Main settings
     websocket.enableTrace(True)
@@ -64,11 +69,29 @@ if __name__ == "__main__":
     
     try:
         while True:
-            event = receive_json_response(ws)    
+            # Listening for events
+            event = receive_json_response(ws)
+            
+            # For Authentication
             message_header = {"authorization": "Bot {}".format(WebSocket_Config.botToken)}
-            print(event["d"])
 
+            
+            
+        
+            try:
+                content = event["d"]["content"]
+                
+                author = event["d"]["author"]["username"]
+                
+                slash_command(content)
+                
+                
+            except:
+                pass
+        
+        # asyncio.get_event_loop().run_until_compelte(ws)
     except Exception as e:
         print(e)
+        pass
 
 
