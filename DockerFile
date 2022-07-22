@@ -1,0 +1,19 @@
+
+# steps needed to execute
+# need all of folder - not just one file
+# need to setup python3 -m venv .venv
+# need to pip install requirements.txt
+# execute main.py
+
+
+FROM python:3.8-bullseye
+
+RUN python3 -m venv .venv
+
+# Install dependencies:
+COPY requirements.txt .
+RUN . /.venv/bin/activate && pip install -r requirements.txt
+
+# Run the application:
+COPY src/ .
+CMD . /.venv/bin/activate && exec python myapp.py
